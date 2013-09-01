@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="Random pics" name="description">
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
+    <link rel="stylesheet" href="app.css">
+    <script src="infinite-scroll.js"></script>
+    <title>Random Pics</title>
+  </head>
+  <body class="scroll">
+    <div id="images"></div>
+    <script>
+    //minified version of stripped down underscore.js
+      (function(){var e=this;var t=Array.prototype,n=Object.prototype;var r=n.hasOwnProperty,i=t.forEach,s=t.map,o=t.reduce,u=Array.isArray;var a=function(e){if(e instanceof a)return e;if(!(this instanceof a))return new a(e);this._wrapped=e};e._=a;var f=a.each=a.forEach=function(e,t,n){if(e==null)return;if(i&&e.forEach===i){e.forEach(t,n)}else if(e.length===+e.length){for(var r=0,s=e.length;r<s;r++){if(t.call(n,e[r],r,e)===breaker)return}}else{var o=a.keys(e);for(var r=0,s=o.length;r<s;r++){if(t.call(n,e[o[r]],o[r],e)===breaker)return}}};a.map=a.collect=function(e,t,n){var r=[];if(e==null)return r;if(s&&e.map===s)return e.map(t,n);f(e,function(e,i,s){r.push(t.call(n,e,i,s))});return r};var l="Reduce of empty array with no initial value";a.reduce=a.foldl=a.inject=function(e,t,n,r){var i=arguments.length>2;if(e==null)e=[];if(o&&e.reduce===o){if(r)t=a.bind(t,r);return i?e.reduce(t,n):e.reduce(t)}f(e,function(e,s,o){if(!i){n=e;i=true}else{n=t.call(r,n,e,s,o)}});if(!i)throw new TypeError(l);return n};a.isArray=u||function(e){return toString.call(e)=="[object Array]"};a.max=function(e,t,n){if(!t&&a.isArray(e)&&e[0]===+e[0]&&e.length<65535){return Math.max.apply(Math,e)}if(!t&&a.isEmpty(e))return-Infinity;var r={computed:-Infinity,value:-Infinity};f(e,function(e,i,s){var o=t?t.call(n,e,i,s):e;o>r.computed&&(r={value:e,computed:o})});return r.value};a.min=function(e,t,n){if(!t&&a.isArray(e)&&e[0]===+e[0]&&e.length<65535){return Math.min.apply(Math,e)}if(!t&&a.isEmpty(e))return Infinity;var r={computed:Infinity,value:Infinity};f(e,function(e,i,s){var o=t?t.call(n,e,i,s):e;o<r.computed&&(r={value:e,computed:o})});return r.value}}).call(this)
+
+      //minified version of the classic linear partitioning algorithm
+      var linear_partition = function(e,t){var n,r,i,s,o,u,a,f,l,c,h,p,d;o=e.length;if(t<=0){return[]}if(t>o){return e.map(function(e){return[e]})}a=function(){var e,n;n=[];for(l=e=0;0<=o?e<o:e>o;l=0<=o?++e:--e){n.push(function(){var e,n;n=[];for(f=e=0;0<=t?e<t:e>t;f=0<=t?++e:--e){n.push(0)}return n}())}return n}();u=function(){var e,n,r;r=[];for(l=e=0,n=o-1;0<=n?e<n:e>n;l=0<=n?++e:--e){r.push(function(){var e,n,r;r=[];for(f=e=0,n=t-1;0<=n?e<n:e>n;f=0<=n?++e:--e){r.push(0)}return r}())}return r}();for(r=c=0;0<=o?c<o:c>o;r=0<=o?++c:--c){a[r][0]=e[r]+(r?a[r-1][0]:0)}for(i=h=0;0<=t?h<t:h>t;i=0<=t?++h:--h){a[0][i]=e[0]}for(r=p=1;1<=o?p<o:p>o;r=1<=o?++p:--p){for(i=d=1;1<=t?d<t:d>t;i=1<=t?++d:--d){s=_.min(function(){var e,t;t=[];for(f=e=0;0<=r?e<r:e>r;f=0<=r?++e:--e){t.push([_.max([a[f][i-1],a[r][0]-a[f][0]]),f])}return t}(),function(e){return e[0]});a[r][i]=s[0];u[r-1][i-1]=s[1]}}o=o-1;t=t-2;n=[];while(t>=0){n=[function(){var n,i,s,a;a=[];for(r=n=i=u[o-1][t]+1,s=o+1;i<=s?n<s:n>s;r=i<=s?++n:--n){a.push(e[r])}return a}()].concat(n);o=u[o-1][t];t=t-1}return[function(){var t,n,i;i=[];for(r=t=0,n=o+1;0<=n?t<n:t>n;r=0<=n?++t:--t){i.push(e[r])}return i}()].concat(n)}
+
+      // the request for a json array of pictures info
+      var get_pictures = function(){
+        var xhReq = new XMLHttpRequest();
+        xhReq.open("GET", "get_img.php", false);
+        xhReq.send(null);
+        var serverResponse = xhReq.responseText;
+        photos = JSON.parse(serverResponse);
+        add_pictures(photos);
+      }
+
+      // add the pictures in the dom, after calculating the perfect size
+      var add_pictures = function(photos){
+        var w = window,
+        d = document,
+        e = d.documentElement,
+        g = d.getElementsByTagName('body')[0],
+
+        winH = w.innerHeight|| e.clientHeight|| g.clientHeight;
+        winW = document.getElementById('images').clientWidth - 12;
+        ideal_height = parseInt(winH/3);
+
+        summed_width = photos.reduce((function (sum, p) {
+          return sum += p.aspect_ratio * ideal_height;
+        }), 0);
+
+        rows = Math.round(summed_width / winW);
+
+        if (rows < 1) {
+          _.each(photos, function (photo) {
+            photo.width = parseInt(ideal_height * photo.aspect_ratio);
+            photo.height = ideal_height;
+            return photo;
+          });
+        } else {
+          weights = _.map(photos, function (p) {
+            return parseInt(p.aspect_ratio * 100);
+          });
+          partition = linear_partition(weights, rows);
+
+          index = 0;
+          row_buffer = [];
+
+          _.each(partition, function (row) {
+            var summed_ratios;
+            row_buffer.length = 0;
+            _.each(row, function () {
+              return row_buffer.push(photos[index++]);
+            });
+
+            summed_ratios = row_buffer.reduce((function (sum, p) {
+              return sum += p.aspect_ratio;
+            }), 0);
+
+            var row_width = winW - 4 * row_buffer.length; //2px each sides of each pictures
+            return _.each(row_buffer, function (photo) {
+              photo.width = parseInt(row_width / summed_ratios * photo.aspect_ratio);
+              photo.height = parseInt(row_width / summed_ratios);
+              return photo;
+            });
+          });
+        }
+
+      div_father = document.getElementById('images');
+      _.each(photos, function (photo) {
+        var div = div_father.appendChild(document.createElement('div'));
+        div.className = 'photo';
+        div.style.width = photo.width + 'px';
+        div.style.height = photo.height + 'px';
+        div.style.backgroundImage = 'url(' + photo.link + ')';
+      }); 
+    }
+
+    get_pictures();
+
+    var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0],x=w.innerWidth||e.clientWidth||g.clientWidth,y=w.innerHeight||e.clientHeight||g.clientHeight;
+
+     var options = {
+        distance: y,
+        callback: function(done) {
+          get_pictures();
+          done();
+        }
+      }
+    // setup infinite scroll
+    infiniteScroll(options);
+  </script>
+ </body>
+</html>
